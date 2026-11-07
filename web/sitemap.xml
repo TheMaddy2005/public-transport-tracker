@@ -3,4 +3,10 @@
   <url>
     <loc>https://public-transport-tracker-phi.vercel.app/</loc>
   </url>
+  <url>
+    <loc>https://public-transport-tracker-phi.vercel.app/terms.html</loc>
+  </url>
+  <url>
+    <loc>https://public-transport-tracker-phi.vercel.app/privacy.html</loc>
+  </url>
 </urlset>
