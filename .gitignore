@@ -1,0 +1,3 @@
+out/
+*.class
+lib/mysql-connector*.jar
