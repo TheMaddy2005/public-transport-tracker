@@ -90,6 +90,9 @@ The same SQL runs standalone too: `mysql -u root -p < sql/03_queries.sql`
 
 ## Live web demo
 
+**https://public-transport-tracker-phi.vercel.app**
+
+
 The repo also ships a small hosted demo so the tracking queries can be tried in a
 browser: a read-only dashboard (`web/index.html`) plus two tiny serverless API
 endpoints (`api/buses.py`, `api/eta.py`, Python stdlib only) that serve the same
