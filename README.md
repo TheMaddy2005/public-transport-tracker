@@ -88,9 +88,20 @@ The same SQL runs standalone too: `mysql -u root -p < sql/03_queries.sql`
 0. Exit
 ```
 
+## Live web demo
+
+The repo also ships a small hosted demo so the tracking queries can be tried in a
+browser: a read-only dashboard (`web/index.html`) plus two tiny serverless API
+endpoints (`api/buses.py`, `api/eta.py`, Python stdlib only) that serve the same
+sample dataset as `sql/02_sample_data.sql` (bundled as `api/data.json`, with ping
+times stored as offsets so the demo always looks live). The Java + MySQL core
+remains the actual implementation; the web demo exists because a hosted demo
+cannot ship a MySQL server. Deployed on Vercel's free tier.
+
 ## Honest limitations
 
 - GPS pings are simulated sample data - there is no real GPS hardware or live feed.
 - The ETA assumes a bus is at its nearest stop and keeps its average speed; it does
   not model traffic, signals, or dwell time at stops.
-- It is a console app; a map or web frontend is possible future work.
+- The web demo is read-only and serves the bundled sample dataset, not a live
+  MySQL database. Adding and storing real pings happens through the Java app.

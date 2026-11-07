@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rampur Bus Tracker - Public Transport Tracking for Small Cities</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --card2: #16202f; --line: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --green: #4ade80;
+    --amber: #fbbf24; --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+  header {
+    padding: 28px 20px 18px; text-align: center;
+    background: linear-gradient(180deg, #172554 0%, var(--bg) 100%);
+  }
+  header h1 { font-size: 1.7rem; letter-spacing: .3px; }
+  header h1 .bus-emoji { margin-right: 8px; }
+  header p { color: var(--muted); margin-top: 6px; font-size: .95rem; }
+  .badge-demo {
+    display: inline-block; margin-top: 10px; padding: 3px 12px; font-size: .75rem;
+    border: 1px solid var(--amber); color: var(--amber); border-radius: 999px;
+  }
+  main { max-width: 1060px; margin: 0 auto; padding: 18px 16px 40px; }
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  section h2 { font-size: 1.05rem; margin-bottom: 12px; color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .bus-card {
+    background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 14px;
+  }
+  .bus-card .num { font-weight: 700; font-size: 1.05rem; }
+  .bus-card .route { color: var(--accent); font-size: .85rem; margin: 2px 0 8px; }
+  .bus-card dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .87rem; }
+  .bus-card dt { color: var(--muted); }
+  .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: .72rem; font-weight: 600; }
+  .pill.on { background: rgba(74,222,128,.15); color: var(--green); border: 1px solid var(--green); }
+  .pill.off { background: rgba(248,113,113,.12); color: var(--red); border: 1px solid var(--red); }
+  #map-wrap { overflow-x: auto; }
+  svg text { font-family: inherit; }
+  .map-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); margin-top: 8px; }
+  .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+  form.eta { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 4px; }
+  select, button {
+    background: var(--card2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 12px; font-size: .9rem;
+  }
+  button { background: var(--accent); color: #082f49; font-weight: 700; cursor: pointer; border: none; }
+  button:hover { filter: brightness(1.1); }
+  #eta-result {
+    margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .95rem;
+    background: var(--card2); border: 1px solid var(--line); display: none;
+  }
+  #eta-result.show { display: block; }
+  #eta-result .big { font-size: 1.25rem; font-weight: 700; color: var(--green); }
+  #eta-result .why { color: var(--muted); font-size: .8rem; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: 10px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 10px 16px 34px; }
+  footer a { color: var(--accent); }
+  .err { color: var(--red); }
+  @media (max-width: 640px) { header h1 { font-size: 1.3rem; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="bus-emoji">&#128652;</span>Rampur Bus Tracker</h1>
+  <p>GPS-based public transport tracking for small cities &middot; Java + MySQL core, this page is its live web demo</p>
+  <span class="badge-demo">Demo data: simulated GPS pings (same dataset as sql/02_sample_data.sql)</span>
+</header>
+<main>
+  <section>
+    <h2>Buses right now</h2>
+    <div class="cards" id="bus-cards">Loading&hellip;</div>
+  </section>
+
+  <section>
+    <h2>Route map (schematic)</h2>
+    <div id="map-wrap"><svg id="map" viewBox="0 0 700 420" width="100%" height="auto" role="img" aria-label="Schematic map of Rampur bus routes"></svg></div>
+    <div class="map-legend">
+      <span><span class="legend-dot" style="background:#38bdf8"></span>Route R1 - City Circle</span>
+      <span><span class="legend-dot" style="background:#fbbf24"></span>Route R2 - College Line</span>
+      <span><span class="legend-dot" style="background:#4ade80"></span>Bus stop</span>
+      <span>&#128652; bus (latest GPS ping)</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>When will my bus arrive?</h2>
+    <form class="eta" id="eta-form">
+      <div><label for="eta-bus">Bus</label><select id="eta-bus"></select></div>
+      <div><label for="eta-stop">Your stop</label><select id="eta-stop"></select></div>
+      <div><button type="submit">Get ETA</button></div>
+    </form>
+    <div id="eta-result"></div>
+  </section>
+
+  <section>
+    <h2>GPS log history</h2>
+    <label for="hist-bus">Bus</label>
+    <select id="hist-bus"></select>
+    <div id="hist-table"></div>
+  </section>
+</main>
+<footer>
+  <p>Transit-log storage &amp; queries: Java (JDBC) + MySQL &middot; this demo serves the sample dataset via a small Python API on Vercel.<br>
+  Ping timestamps are simulated relative to now. ETA assumes average speed, no traffic modelling.<br>
+  Source: <a href="https://github.com/TheMaddy2005/public-transport-tracker">github.com/TheMaddy2005/public-transport-tracker</a></p>
+</footer>
+<script>
+const ROUTE_COLORS = {1: "#38bdf8", 2: "#fbbf24"};
+const BUS_ICONS = {1: "\u{1F68C}", 2: "\u{1F68D}", 3: "\u{1F68E}"};
+let DATA = null;
+
+function fmtAgo(m) { return m <= 1 ? "just now" : m + " min ago"; }
+
+async function load() {
+  try {
+    const res = await fetch("/api/buses");
+    DATA = await res.json();
+    renderCards(); renderMap(); fillSelects(); renderHistory();
+  } catch (e) {
+    document.getElementById("bus-cards").innerHTML =
+      '<p class="err">Could not load bus data: ' + e.message + "</p>";
+  }
+}
+
+function renderCards() {
+  const el = document.getElementById("bus-cards");
+  el.innerHTML = "";
+  for (const b of DATA.buses) {
+    const L = b.latest;
+    const card = document.createElement("div");
+    card.className = "bus-card";
+    card.innerHTML =
+      '<div class="num">' + (BUS_ICONS[b.bus_id] || "\u{1F68C}") + " " + b.bus_number + "</div>" +
+      '<div class="route">' + b.route_name + "</div>" +
+      (L ?
+        '<dl>' +
+        "<dt>Status</dt><dd>" + (L.active ? '<span class="pill on">active</span>' : '<span class="pill off">quiet &gt;15 min</span>') + "</dd>" +
+        "<dt>Near</dt><dd>" + L.nearest_stop.stop_name + (L.nearest_stop.distance_km > 0.05 ? " (" + L.nearest_stop.distance_km + " km away)" : "") + "</dd>" +
+        "<dt>Speed</dt><dd>" + L.speed_kmph.toFixed(1) + " km/h (avg " + b.avg_speed_kmph.toFixed(1) + ")</dd>" +
+        "<dt>Last ping</dt><dd>" + fmtAgo(L.minutes_ago) + "</dd>" +
+        "<dt>Driver</dt><dd>" + b.driver_name + "</dd>" +
+        "</dl>"
+      : "<p>No GPS pings yet.</p>");
+    el.appendChild(card);
+  }
+}
+
+function project(lat, lon) {
+  const lats = [], lons = [];
+  for (const r of DATA.routes) for (const s of r.stops) { lats.push(s.latitude); lons.push(s.longitude); }
+  const pad = 0.0012;
+  const latMin = Math.min(...lats) - pad, latMax = Math.max(...lats) + pad;
+  const lonMin = Math.min(...lons) - pad, lonMax = Math.max(...lons) + pad;
+  const W = 700, H = 420, P = 46;
+  const x = P + (lon - lonMin) / (lonMax - lonMin) * (W - 2 * P);
+  const y = P + (1 - (lat - latMin) / (latMax - latMin)) * (H - 2 * P);
+  return [x, y];
+}
+
+function renderMap() {
+  const svg = document.getElementById("map");
+  const NS = "http://www.w3.org/2000/svg";
+  svg.innerHTML = "";
+  for (const r of DATA.routes) {
+    const pts = r.stops.map(s => project(s.latitude, s.longitude).join(",")).join(" ");
+    const line = document.createElementNS(NS, "polyline");
+    line.setAttribute("points", pts);
+    line.setAttribute("fill", "none");
+    line.setAttribute("stroke", ROUTE_COLORS[r.route_id] || "#64748b");
+    line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke-linecap", "round");
+    line.setAttribute("stroke-linejoin", "round");
+    line.setAttribute("opacity", "0.75");
+    svg.appendChild(line);
+    const first = project(r.stops[0].latitude, r.stops[0].longitude);
+    const cap = document.createElementNS(NS, "text");
+    cap.setAttribute("x", first[0]); cap.setAttribute("y", first[1] - 26);
+    cap.setAttribute("fill", ROUTE_COLORS[r.route_id] || "#94a3b8");
+    cap.setAttribute("font-size", "12"); cap.setAttribute("font-weight", "700");
+    cap.setAttribute("text-anchor", "middle");
+    cap.textContent = r.route_name;
+    svg.appendChild(cap);
+  }
+  for (const r of DATA.routes) for (const s of r.stops) {
+    const [x, y] = project(s.latitude, s.longitude);
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", "6");
+    c.setAttribute("fill", "#4ade80"); c.setAttribute("stroke", "#0f172a"); c.setAttribute("stroke-width", "2");
+    svg.appendChild(c);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y + 20);
+    t.setAttribute("fill", "#cbd5e1"); t.setAttribute("font-size", "11"); t.setAttribute("text-anchor", "middle");
+    t.textContent = s.stop_name;
+    svg.appendChild(t);
+  }
+  for (const b of DATA.buses) {
+    if (!b.latest) continue;
+    const [x, y] = project(b.latest.latitude, b.latest.longitude);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", x); t.setAttribute("y", y - 10);
+    t.setAttribute("font-size", "20"); t.setAttribute("text-anchor", "middle");
+    t.textContent = BUS_ICONS[b.bus_id] || "\u{1F68C}";
+    const title = document.createElementNS(NS, "title");
+    title.textContent = b.bus_number + " - " + b.route_name + " (" + fmtAgo(b.latest.minutes_ago) + ")";
+    t.appendChild(title);
+    svg.appendChild(t);
+  }
+}
+
+function fillSelects() {
+  const busSel = document.getElementById("eta-bus");
+  const histSel = document.getElementById("hist-bus");
+  busSel.innerHTML = ""; histSel.innerHTML = "";
+  for (const b of DATA.buses) {
+    const label = b.bus_number + " (" + b.route_name + ")";
+    busSel.add(new Option(label, b.bus_id));
+    histSel.add(new Option(label, b.bus_id));
+  }
+  fillStops();
+}
+
+function fillStops() {
+  const busId = Number(document.getElementById("eta-bus").value);
+  const bus = DATA.buses.find(b => b.bus_id === busId);
+  const route = DATA.routes.find(r => r.route_id === bus.route_id);
+  const stopSel = document.getElementById("eta-stop");
+  stopSel.innerHTML = "";
+  for (const s of route.stops) stopSel.add(new Option(s.stop_name, s.stop_id));
+}
+
+function renderHistory() {
+  const busId = Number(document.getElementById("hist-bus").value);
+  const bus = DATA.buses.find(b => b.bus_id === busId);
+  const rows = bus.history.slice().reverse().map(p =>
+    "<tr><td>" + fmtAgo(p.minutes_ago) + "</td><td>" + p.latitude.toFixed(6) + ", " + p.longitude.toFixed(6) +
+    "</td><td>" + p.speed_kmph.toFixed(1) + " km/h</td></tr>").join("");
+  document.getElementById("hist-table").innerHTML =
+    "<table><thead><tr><th>When</th><th>Position (lat, lon)</th><th>Speed</th></tr></thead><tbody>" +
+    rows + "</tbody></table>";
+}
+
+document.getElementById("eta-bus").addEventListener("change", fillStops);
+document.getElementById("hist-bus").addEventListener("change", renderHistory);
+document.getElementById("eta-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const busId = document.getElementById("eta-bus").value;
+  const stopId = document.getElementById("eta-stop").value;
+  const box = document.getElementById("eta-result");
+  try {
+    const res = await fetch("/api/eta?bus_id=" + busId + "&stop_id=" + stopId);
+    const r = await res.json();
+    if (!res.ok) { box.innerHTML = '<span class="err">' + r.error + "</span>"; }
+    else if (r.status === "ok") {
+      box.innerHTML = '<div class="big">~' + r.eta_minutes + ' min</div>' +
+        "<div>" + r.bus_number + " &rarr; " + r.stop_name + "</div>" +
+        '<div class="why">' + r.remaining_km + " km left at avg " + r.avg_speed_kmph +
+        " km/h. " + r.assumption + "</div>";
+    } else {
+      box.innerHTML = "<div>" + r.message + "</div>" + '<div class="why">' + r.assumption + "</div>";
+    }
+  } catch (err) {
+    box.innerHTML = '<span class="err">ETA request failed: ' + err.message + "</span>";
+  }
+  box.classList.add("show");
+});
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

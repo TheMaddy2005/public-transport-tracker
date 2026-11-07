@@ -1,0 +1,45 @@
+{
+  "_comment": "Demo snapshot of sql/02_sample_data.sql for the hosted web demo. Ping times are stored as 'minutes_ago' offsets so the demo always looks live; the web API converts them to real timestamps at request time. Keep in sync with sql/02_sample_data.sql.",
+  "routes": [
+    {"route_id": 1, "route_name": "R1 - City Circle", "start_point": "Old Bus Stand", "end_point": "Civil Hospital"},
+    {"route_id": 2, "route_name": "R2 - College Line", "start_point": "Railway Station", "end_point": "Government College"}
+  ],
+  "stops": [
+    {"stop_id": 1, "stop_name": "Old Bus Stand", "latitude": 18.408800, "longitude": 76.560400},
+    {"stop_id": 2, "stop_name": "Market Chowk", "latitude": 18.410900, "longitude": 76.565300},
+    {"stop_id": 3, "stop_name": "Town Hall", "latitude": 18.414200, "longitude": 76.570100},
+    {"stop_id": 4, "stop_name": "Civil Hospital", "latitude": 18.418300, "longitude": 76.574800},
+    {"stop_id": 5, "stop_name": "Railway Station", "latitude": 18.399500, "longitude": 76.553200},
+    {"stop_id": 6, "stop_name": "Nehru Park", "latitude": 18.404600, "longitude": 76.558700},
+    {"stop_id": 7, "stop_name": "Government College", "latitude": 18.413600, "longitude": 76.563900}
+  ],
+  "route_stops": [
+    {"route_id": 1, "stop_id": 1, "stop_order": 1, "distance_from_start_km": 0.00},
+    {"route_id": 1, "stop_id": 2, "stop_order": 2, "distance_from_start_km": 0.90},
+    {"route_id": 1, "stop_id": 3, "stop_order": 3, "distance_from_start_km": 1.80},
+    {"route_id": 1, "stop_id": 4, "stop_order": 4, "distance_from_start_km": 2.70},
+    {"route_id": 2, "stop_id": 5, "stop_order": 1, "distance_from_start_km": 0.00},
+    {"route_id": 2, "stop_id": 6, "stop_order": 2, "distance_from_start_km": 1.20},
+    {"route_id": 2, "stop_id": 7, "stop_order": 3, "distance_from_start_km": 2.40}
+  ],
+  "buses": [
+    {"bus_id": 1, "bus_number": "MH-24-B-1001", "route_id": 1, "driver_name": "Suresh Patil"},
+    {"bus_id": 2, "bus_number": "MH-24-B-1002", "route_id": 1, "driver_name": "Anil Shinde"},
+    {"bus_id": 3, "bus_number": "MH-24-B-2001", "route_id": 2, "driver_name": "Ramesh Yadav"}
+  ],
+  "gps_logs": [
+    {"bus_id": 1, "latitude": 18.408800, "longitude": 76.560400, "speed_kmph": 0.0,  "minutes_ago": 20},
+    {"bus_id": 1, "latitude": 18.409600, "longitude": 76.562500, "speed_kmph": 18.5, "minutes_ago": 16},
+    {"bus_id": 1, "latitude": 18.410900, "longitude": 76.565300, "speed_kmph": 22.0, "minutes_ago": 12},
+    {"bus_id": 1, "latitude": 18.412400, "longitude": 76.567600, "speed_kmph": 19.2, "minutes_ago": 8},
+    {"bus_id": 1, "latitude": 18.414200, "longitude": 76.570100, "speed_kmph": 15.8, "minutes_ago": 4},
+    {"bus_id": 1, "latitude": 18.415900, "longitude": 76.572200, "speed_kmph": 21.4, "minutes_ago": 1},
+    {"bus_id": 2, "latitude": 18.408800, "longitude": 76.560400, "speed_kmph": 0.0,  "minutes_ago": 14},
+    {"bus_id": 2, "latitude": 18.409800, "longitude": 76.563000, "speed_kmph": 17.0, "minutes_ago": 9},
+    {"bus_id": 2, "latitude": 18.410900, "longitude": 76.565300, "speed_kmph": 20.5, "minutes_ago": 3},
+    {"bus_id": 3, "latitude": 18.399500, "longitude": 76.553200, "speed_kmph": 0.0,  "minutes_ago": 18},
+    {"bus_id": 3, "latitude": 18.402000, "longitude": 76.556000, "speed_kmph": 24.0, "minutes_ago": 12},
+    {"bus_id": 3, "latitude": 18.404600, "longitude": 76.558700, "speed_kmph": 16.5, "minutes_ago": 6},
+    {"bus_id": 3, "latitude": 18.408000, "longitude": 76.561000, "speed_kmph": 19.8, "minutes_ago": 2}
+  ]
+}
